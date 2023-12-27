@@ -1,14 +1,20 @@
 package com.zionhuang.music.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zionhuang.innertube.YouTube
 import com.zionhuang.innertube.pages.ExplorePage
+import com.zionhuang.innertube.utils.parseCookieString
+import com.zionhuang.music.constants.InnerTubeCookieKey
 import com.zionhuang.music.db.MusicDatabase
 import com.zionhuang.music.db.entities.Artist
 import com.zionhuang.music.db.entities.Song
+import com.zionhuang.music.utils.dataStore
+import com.zionhuang.music.utils.get
 import com.zionhuang.music.utils.reportException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -17,8 +23,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    @ApplicationContext context: Context,
     val database: MusicDatabase,
 ) : ViewModel() {
+    private val isLoggedIn = {
+        "SAPISID" in
+                parseCookieString(context.dataStore[InnerTubeCookieKey] ?: "")
+    }
+
     val isRefreshing = MutableStateFlow(false)
 
     val quickPicks = MutableStateFlow<List<Song>?>(null)
@@ -26,7 +38,7 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun load() {
         quickPicks.value = database.quickPicks().first().shuffled().take(20)
-        YouTube.explore().onSuccess { page ->
+        YouTube.explore(isLoggedIn()).onSuccess { page ->
             val artists: Set<String>
             val favouriteArtists: Set<String>
             database.artistsByCreateDateAsc().first().let { list ->

@@ -1,13 +1,19 @@
 package com.zionhuang.music.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zionhuang.innertube.YouTube
 import com.zionhuang.innertube.models.AlbumItem
+import com.zionhuang.innertube.utils.parseCookieString
+import com.zionhuang.music.constants.InnerTubeCookieKey
 import com.zionhuang.music.db.MusicDatabase
 import com.zionhuang.music.db.entities.Artist
+import com.zionhuang.music.utils.dataStore
+import com.zionhuang.music.utils.get
 import com.zionhuang.music.utils.reportException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -16,14 +22,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NewReleaseViewModel @Inject constructor(
+    @ApplicationContext context: Context,
     database: MusicDatabase,
 ) : ViewModel() {
+    private val isLoggedIn = {
+        "SAPISID" in
+                parseCookieString(context.dataStore[InnerTubeCookieKey] ?: "")
+    }
     private val _newReleaseAlbums = MutableStateFlow<List<AlbumItem>>(emptyList())
     val newReleaseAlbums = _newReleaseAlbums.asStateFlow()
 
     init {
         viewModelScope.launch {
-            YouTube.newReleaseAlbums().onSuccess { albums ->
+            YouTube.newReleaseAlbums(isLoggedIn()).onSuccess { albums ->
                 val artists: Set<String>
                 val favouriteArtists: Set<String>
                 database.artistsByCreateDateAsc().first().let { list ->

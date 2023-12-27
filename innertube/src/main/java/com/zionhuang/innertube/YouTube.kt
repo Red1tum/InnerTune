@@ -295,8 +295,8 @@ object YouTube {
         )
     }
 
-    suspend fun explore(): Result<ExplorePage> = runCatching {
-        val response = innerTube.browse(WEB_REMIX, browseId = "FEmusic_explore").body<BrowseResponse>()
+    suspend fun explore(setLogin: Boolean): Result<ExplorePage> = runCatching {
+        val response = innerTube.browse(WEB_REMIX, browseId = "FEmusic_explore", setLogin = setLogin).body<BrowseResponse>()
         ExplorePage(
             newReleaseAlbums = response.contents?.singleColumnBrowseResultsRenderer?.tabs?.firstOrNull()?.tabRenderer?.content?.sectionListRenderer?.contents?.find {
                 it.musicCarouselShelfRenderer?.header?.musicCarouselShelfBasicHeaderRenderer?.moreContentButton?.buttonRenderer?.navigationEndpoint?.browseEndpoint?.browseId == "FEmusic_new_releases_albums"
@@ -312,8 +312,8 @@ object YouTube {
         )
     }
 
-    suspend fun newReleaseAlbums(): Result<List<AlbumItem>> = runCatching {
-        val response = innerTube.browse(WEB_REMIX, browseId = "FEmusic_new_releases_albums").body<BrowseResponse>()
+    suspend fun newReleaseAlbums(setLogin: Boolean): Result<List<AlbumItem>> = runCatching {
+        val response = innerTube.browse(WEB_REMIX, browseId = "FEmusic_new_releases_albums", setLogin = setLogin).body<BrowseResponse>()
         response.contents?.singleColumnBrowseResultsRenderer?.tabs?.firstOrNull()?.tabRenderer?.content?.sectionListRenderer?.contents?.firstOrNull()?.gridRenderer?.items
             ?.mapNotNull { it.musicTwoRowItemRenderer }
             ?.mapNotNull(NewReleaseAlbumPage::fromMusicTwoRowItemRenderer)
