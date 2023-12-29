@@ -28,6 +28,14 @@ fun List<Run>.splitBySeparator(): List<List<Run>> {
     return res
 }
 
+// Removes identification item such as 'song' 'episode' if it's present in list
+fun List<List<Run>>.removeIdentificationItem(): List<List<Run>> {
+    return this.firstOrNull()
+        ?.firstOrNull()?.navigationEndpoint?.let {
+            this
+        } ?: this.drop(1)
+}
+
 fun List<Run>.oddElements() = filterIndexed { index, _ ->
     index % 2 == 0
 }
